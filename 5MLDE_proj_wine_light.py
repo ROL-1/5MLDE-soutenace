@@ -13,7 +13,7 @@ from tensorflow.keras.callbacks import History
 from prefect import task, flow
 
 
-@task
+@task(retries=3, retry_delay_seconds=10)
 def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Charge et prépare les données pour l'entraînement et l'évaluation.
@@ -34,7 +34,7 @@ def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
-@task
+@task(retries=2, retry_delay_seconds=5)
 def preprocess_data(X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Prétraite les données en appliquant la normalisation et le codage.
@@ -87,7 +87,7 @@ def build_model(input_dim: int, output_dim: int) -> Sequential:
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
-@task
+@task(retries=1, retry_delay_seconds=30)
 def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame, X_val: pd.DataFrame, y_val: pd.DataFrame, epochs: int = 2, batch_size: int = 32) -> History:
     """
     Entraîne le modèle de réseau de neurones.
@@ -104,7 +104,7 @@ def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame,
     history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, verbose=1)
     return history
 
-@task
+@task(retries=1, retry_delay_seconds=5)
 def evaluate_model(model: Sequential, X_test: pd.DataFrame, y_test: pd.DataFrame) -> Tuple[float, float]:
     """
     Évalue le modèle sur l'ensemble de test.
@@ -121,7 +121,7 @@ def evaluate_model(model: Sequential, X_test: pd.DataFrame, y_test: pd.DataFrame
     print(f"Test Accuracy: {accuracy}")
     return loss, accuracy
 
-@flow
+@flow(name="Wine quality prediction flow")
 def wine_quality_flow(dataset_path: str):
     """
     Orchestre un workflow pour charger, prétraiter, entraîner et évaluer un modèle de prédiction de la qualité du vin.
