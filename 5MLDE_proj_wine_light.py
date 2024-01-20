@@ -12,7 +12,6 @@ from tensorflow.keras.callbacks import History
 
 from prefect import task, flow
 
-
 @task(retries=3, retry_delay_seconds=10)
 def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -146,7 +145,6 @@ def wine_quality_flow(dataset_path: str):
     model = build_model(input_dim, output_dim)
     history = train_model(model, X_train_processed, y_train, X_val_processed, y_val, epochs=2, batch_size=32)
     loss, accuracy = evaluate_model(model, X_test_processed, y_test)
-
 
 if __name__ == "__main__":
     wine_quality_flow("winequality.csv")

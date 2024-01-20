@@ -1,14 +1,10 @@
-name: 5MLDE
+name: mlde
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - python=3.9
-  - numpy
   - pandas
-  - prefect
-  - matplotlib
   - scikit-learn
   - tensorflow
-
-
-# conda env create -f environment.yml
+  - conda-forge::prefect
