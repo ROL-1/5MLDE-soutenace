@@ -7,4 +7,5 @@ dependencies:
   - pandas
   - scikit-learn
   - tensorflow
+  - conda-forge::great-expectations
   - conda-forge::prefect

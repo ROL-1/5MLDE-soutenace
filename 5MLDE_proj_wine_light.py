@@ -148,14 +148,14 @@ def wine_quality_flow(dataset_path: str):
 
 
 if __name__ == "__main__":
-    # wine_quality_flow("winequality.csv")
-     wine_quality_flow.from_source(
-        source="https://github.com/ROL-1/5MLDE-soutenace.git", 
-        entrypoint="5MLDE_proj_wine_light.py:wine_quality_flow"
-    ).deploy(
-        name="WineQualityDeployment",
-        work_pool_name="my-managed-pool",
-    )
+    wine_quality_flow("data/winequality.csv")
+    #  wine_quality_flow.from_source(
+    #     source="https://github.com/ROL-1/5MLDE-soutenace.git", 
+    #     entrypoint="5MLDE_proj_wine_light.py:wine_quality_flow"
+    # ).deploy(
+    #     name="WineDeployGithubDeployment",
+    #     work_pool_name="my-managed-pool",
+    # )
     # wine_quality_flow.serve(
     #     name="WineServeDeployment",
     #     tags=["ml", "wine-quality"],

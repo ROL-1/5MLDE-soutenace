@@ -12,7 +12,7 @@
     attention la commande 'orion' n'est plus utilisée (utiliser 'server').
     Erreur "utf-8" dans mon environnement / windows 
         => passage à la version cloud.
-## Server
+## Server (NON)
     ### Lancer
         prefect config set PREFECT_API_URL=http://0.0.0.0:4200/api
         prefect server start --host 0.0.0.0
@@ -20,7 +20,7 @@
         http://127.0.0.1:4200/docs
         http://127.0.0.1:4200/
 
-## cloud
+## Cloud (OUI)
     créer un compte sur : https://app.prefect.cloud
     prefect cloud login
 
@@ -33,3 +33,20 @@
     vérifier les workpool :
     prefect work-pool ls
     et ajout du ciblage vers le github
+    lancement par :
+    prefect deployment run 'Wine quality prediction flow/WineDeployGithubDeployment'
+
+# Great_expectations
+## installer
+    conda install conda-forge::great-expectations
+## intialiser
+    great_expectations init
+    great_expectations datasource new
+    => ouverture du notebook, choisir un nom et lancer les cellules : 'winequality_datasource'
+    great_expectations suite new
+    => automatique / choix du nom : 'wine_quality_expectation_suite'
+    great_expectations checkpoint new wine_quality_checkpoint
+    => ouverture du notebook : tout executer
+## lancer 
+    context.run_checkpoint(checkpoint_name="wine_quality_checkpoint")
+    context.open_data_docs()
