@@ -26,3 +26,10 @@
 
 ## Puis lancer le fichier
     python .\5MLDE_proj_wine_light.py
+    avec .serve => ajout du deployment : le script doit rester actif pour que le schedul fonctionne.
+    avec .deploy => il faut relancer via CLI ou UI
+    besoin d'un workpool :
+    prefect work-pool create my-managed-pool --type prefect:managed 
+    vérifier les workpool :
+    prefect work-pool ls
+    et ajout du ciblage vers le github

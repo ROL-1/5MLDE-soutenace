@@ -146,5 +146,21 @@ def wine_quality_flow(dataset_path: str):
     history = train_model(model, X_train_processed, y_train, X_val_processed, y_val, epochs=2, batch_size=32)
     loss, accuracy = evaluate_model(model, X_test_processed, y_test)
 
+
 if __name__ == "__main__":
-    wine_quality_flow("winequality.csv")
+    # wine_quality_flow("winequality.csv")
+     wine_quality_flow.from_source(
+        source="https://github.com/ROL-1/5MLDE-soutenace.git", 
+        entrypoint="5MLDE_proj_wine_light.py:wine_quality_flow"
+    ).deploy(
+        name="WineQualityDeployment",
+        work_pool_name="my-managed-pool",
+    )
+    # wine_quality_flow.serve(
+    #     name="WineServeDeployment",
+    #     tags=["ml", "wine-quality"],
+    #     # cron="0 1 * * *",  # Exécution quotidienne à 1h du matin
+    #     description="Deployment for wine quality prediction model",
+    # )
+
+    
