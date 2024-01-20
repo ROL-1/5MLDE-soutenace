@@ -35,6 +35,7 @@
     et ajout du ciblage vers le github
     lancement par :
     prefect deployment run 'Wine quality prediction flow/WineDeployGithubDeployment'
+    => Déploiment mis de côté pour le moment, les fonctions sont en commentaire dans le "if __name__ == "__main__":"
 
 # Great_expectations
 ## installer
