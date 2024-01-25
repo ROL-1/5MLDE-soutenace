@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  prefect-flows:
+    container_name: flows
+    build:
+      context: ./flows
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./data/.prefect:/root/.prefect
+    environment:
+      PREFECT_API_URL: ${PREFECT_API_URL}
+      PREFECT_API_KEY: ${PREFECT_API_KEY}
