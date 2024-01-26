@@ -25,8 +25,12 @@ def run_mlflow_pipeline(dataset_path: str):
         mlflow.log_param("epochs", 2)
         mlflow.log_param("batch_size", 32)
         mlflow.log_metrics({"train_accuracy": history.history["accuracy"][-1], "val_accuracy": history.history["val_accuracy"][-1]})
-
+        print("*"*100)
+        print("Enregistrement du modèle en tant qu'artefact...")
         mlflow.keras.log_model(model, "models")
+        artifact_uri = mlflow.get_artifact_uri("models")
+        print(f"Modèle enregistré avec succès en tant qu'artefact. Chemin de l'artefact 'models': {artifact_uri}")
+        print("*"*100)
 
 if __name__ == "__main__":
     run_mlflow_pipeline("data/winequality.csv")
