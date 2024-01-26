@@ -11,3 +11,11 @@ services:
     environment:
       PREFECT_API_URL: ${PREFECT_API_URL}
       PREFECT_API_KEY: ${PREFECT_API_KEY}
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    command: mlflow server --backend-store-uri sqlite:///database.db --default-artifact-root /mlruns --host 0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+      - ./database:/database
