@@ -27,7 +27,6 @@ mlde_project_deployment = Deployment.build_from_flow(
 
 def main_flow():
     mlde_project_deployment.apply()
-    data_cleaning_visualization_and_prediction()
     
 if __name__ == "__main__":
     main_flow()
