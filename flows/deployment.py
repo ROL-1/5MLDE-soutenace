@@ -8,7 +8,7 @@ from scripts.model_predictions import wine_quality_prediction_flow
 
 import os
 
-@flow
+@flow('final_workflow')
 def data_cleaning_visualization_and_prediction():
     dataset_path = os.path.abspath(
                      os.path.join(os.path.dirname(__file__), '..', 'app', 'data', 'winequality.csv')

@@ -13,7 +13,7 @@ from tensorflow.keras.callbacks import History
 
 from prefect import task, flow
 
-@task(retries=3, retry_delay_seconds=10)
+@task(name='load_data_3', tags=['model-prediction'], retries=3, retry_delay_seconds=10)
 def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Loads and prepares data for training and evaluation.
@@ -32,7 +32,7 @@ def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25)
     return X_train, X_val, X_test, y_train, y_val, y_test
 
-@task(retries=2, retry_delay_seconds=5)
+@task(name='data_preprocessing', tags=['model-prediction'], retries=2, retry_delay_seconds=5)
 def preprocess_data(X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Preprocesses the data by applying normalization and encoding.
@@ -67,7 +67,7 @@ def preprocess_data(X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataF
 
     return X_train_processed, X_val_processed, X_test_processed
 
-@task
+@task(name='model_declaration', tags=['model-prediction'])
 def build_model(input_dim: int, output_dim: int) -> Sequential:
     """
     Builds a neural network model.
@@ -85,7 +85,7 @@ def build_model(input_dim: int, output_dim: int) -> Sequential:
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
-@task(retries=1, retry_delay_seconds=30)
+@task(name='model_training', tags=['model-prediction'], retries=1, retry_delay_seconds=30)
 def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame, X_val: pd.DataFrame, y_val: pd.DataFrame, epochs: int = 2, batch_size: int = 32) -> History:
     """
     Trains the neural network model.
@@ -102,7 +102,7 @@ def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame,
     history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, verbose=1)
     return history
 
-@task(retries=1, retry_delay_seconds=5)
+@task(name='model_evaluation', tags=['model-prediction'], retries=1, retry_delay_seconds=5)
 def evaluate_model(model: Sequential, X_test: pd.DataFrame, y_test: pd.DataFrame) -> Tuple[float, float]:
     """
     Evaluates the model on the test set.
