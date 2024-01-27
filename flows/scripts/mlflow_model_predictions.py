@@ -2,7 +2,7 @@ import mlflow
 import mlflow.keras
 
 from model_predictions import load_and_prepare_data, preprocess_data, build_model, train_model, evaluate_model
-
+from config import logger, MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, REGISTERED_MODEL_NAME
 
 mlflow.set_tracking_uri("http://localhost:5000")
 mlflow.set_experiment("Wine Quality Prediction")
@@ -20,17 +20,27 @@ def run_mlflow_pipeline(dataset_path: str):
     history = train_model.fn(model, X_train_processed, y_train, X_val_processed, y_val, epochs=2, batch_size=32)
     loss, accuracy = evaluate_model.fn(model, X_test_processed, y_test)
 
-    with mlflow.start_run():     
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)  
+
+    with mlflow.start_run() as run:  
+        run_id = run.info.run_id
+        logger.info(f"run id: {run_id}")
+        logger.info(f"artifact_uri: {mlflow.get_artifact_uri()}")
+        logger.info(f"registry_uri: {mlflow.get_registry_uri()}")
 
         mlflow.log_param("epochs", 2)
         mlflow.log_param("batch_size", 32)
         mlflow.log_metrics({"train_accuracy": history.history["accuracy"][-1], "val_accuracy": history.history["val_accuracy"][-1]})
-        print("*"*100)
-        print("Enregistrement du modèle en tant qu'artefact...")
-        mlflow.keras.log_model(model, "models")
-        artifact_uri = mlflow.get_artifact_uri("models")
-        print(f"Modèle enregistré avec succès en tant qu'artefact. Chemin de l'artefact 'models': {artifact_uri}")
-        print("*"*100)
+
+        logger.info(f"Logging and register the model {REGISTERED_MODEL_NAME}...")
+        mlflow.keras.log_model(model, artifact_path="model", registered_model_name=REGISTERED_MODEL_NAME) 
+
+        # Create a text file to log as an artifact
+        # with open("metrics.txt", "w") as f:
+        #     f.write(f"Loss: {loss}\n")
+        #     f.write(f"Accuracy: {accuracy}\n")
+        # mlflow.log_artifact("metrics.txt")
 
 if __name__ == "__main__":
     run_mlflow_pipeline("data/winequality.csv")
