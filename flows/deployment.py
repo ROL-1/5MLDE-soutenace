@@ -15,6 +15,7 @@ def data_cleaning_visualization_and_prediction():
                     )
     clean_data_flow(dataset_path)
     data_visualization_flow(dataset_path,  wait_for=clean_data_flow)
+    wine_quality_prediction_flow(dataset_path, wait_for=data_visualization_flow)
 
 mlde_project_deployment = Deployment.build_from_flow(
     flow=data_cleaning_visualization_and_prediction,
