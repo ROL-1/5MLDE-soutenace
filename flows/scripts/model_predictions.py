@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -15,34 +16,32 @@ from prefect import task, flow
 @task(retries=3, retry_delay_seconds=10)
 def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Charge et prépare les données pour l'entraînement et l'évaluation.
+    Loads and prepares data for training and evaluation.
+
+    Args:
+    dataset_path (str): Path to the dataset file.
 
     Returns:
-    tuple: Retourne les ensembles de données divisés en train, validation et test.
+    Tuple containing split training, validation, and test sets (X_train, X_val, X_test, y_train, y_val, y_test).
     """
     df = pd.read_csv(dataset_path)
-
-    # Réduction des classes de qualité
     df["quality"] = df["quality"].apply(lambda x: 0 if x < 6 else (1 if x == 6 else 2))
-
     y = to_categorical(df["quality"])
     X = df.drop("quality", axis=1)
-
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25)
-
     return X_train, X_val, X_test, y_train, y_val, y_test
 
 @task(retries=2, retry_delay_seconds=5)
 def preprocess_data(X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Prétraite les données en appliquant la normalisation et le codage.
+    Preprocesses the data by applying normalization and encoding.
 
     Args:
-    X_train, X_val, X_test (DataFrame): Ensembles de données à prétraiter.
+    X_train, X_val, X_test (DataFrame): Datasets to preprocess.
 
     Returns:
-    tuple: Retourne les ensembles de données prétraités.
+    Tuple of preprocessed datasets (X_train_processed, X_val_processed, X_test_processed).
     """
     numeric_features = X_train.select_dtypes(include=['int64', 'float64']).columns
     categorical_features = X_train.select_dtypes(include=['object']).columns
@@ -71,14 +70,14 @@ def preprocess_data(X_train: pd.DataFrame, X_val: pd.DataFrame, X_test: pd.DataF
 @task
 def build_model(input_dim: int, output_dim: int) -> Sequential:
     """
-    Construit un modèle de réseau de neurones.
+    Builds a neural network model.
 
     Args:
-    input_dim (int): Dimension de l'entrée.
-    output_dim (int): Dimension de la sortie.
+    input_dim (int): Input dimension.
+    output_dim (int): Output dimension.
 
     Returns:
-    Sequential: Un modèle de réseau de neurones.
+    Sequential: Neural network model.
     """
     model = Sequential()
     model.add(Dense(12, input_dim=input_dim, activation='relu'))
@@ -89,16 +88,16 @@ def build_model(input_dim: int, output_dim: int) -> Sequential:
 @task(retries=1, retry_delay_seconds=30)
 def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame, X_val: pd.DataFrame, y_val: pd.DataFrame, epochs: int = 2, batch_size: int = 32) -> History:
     """
-    Entraîne le modèle de réseau de neurones.
+    Trains the neural network model.
 
     Args:
-    model (Sequential): Le modèle à entraîner.
-    X_train, y_train, X_val, y_val (ndarray): Données d'entraînement et de validation.
-    epochs (int): Nombre d'époques pour l'entraînement.
-    batch_size (int): Taille du batch pour l'entraînement.
+    model (Sequential): The model to train.
+    X_train, y_train, X_val, y_val (ndarray): Training and validation data.
+    epochs (int): Number of epochs for training.
+    batch_size (int): Batch size for training.
 
     Returns:
-    History: L'historique de l'entraînement.
+    History: Training history.
     """
     history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, verbose=1)
     return history
@@ -106,37 +105,37 @@ def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame,
 @task(retries=1, retry_delay_seconds=5)
 def evaluate_model(model: Sequential, X_test: pd.DataFrame, y_test: pd.DataFrame) -> Tuple[float, float]:
     """
-    Évalue le modèle sur l'ensemble de test.
+    Evaluates the model on the test set.
 
     Args:
-    model (Sequential): Le modèle à évaluer.
-    X_test, y_test (ndarray): Données de test.
+    model (Sequential): The model to evaluate.
+    X_test, y_test (ndarray): Test data.
 
     Returns:
-    tuple: Perte et précision sur l'ensemble de test.
+    Tuple: Test loss and accuracy.
     """
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
     print(f"Test Loss: {loss}")
     print(f"Test Accuracy: {accuracy}")
     return loss, accuracy
 
-@flow(name="Wine quality prediction flow")
-def wine_quality_flow(dataset_path: str):
+@flow(name="Wine Quality Prediction Flow")
+def wine_quality_prediction_flow(dataset_path: str):
     """
-    Orchestre un workflow pour charger, prétraiter, entraîner et évaluer un modèle de prédiction de la qualité du vin.
+    Orchestrates a workflow for loading, preprocessing, training, and evaluating a wine quality prediction model.
 
     Args:
-    dataset_path (str): Chemin vers le fichier du dataset de qualité du vin.
+    dataset_path (str): Path to the wine quality dataset file.
 
-    Ce workflow exécute plusieurs tâches en séquence :
-    1. Charge et divise le dataset en ensembles d'entraînement, de validation et de test.
-    2. Prétraite les données en normalisant les caractéristiques numériques et en encodant les caractéristiques catégorielles.
-    3. Construit un modèle de réseau de neurones adapté à la tâche de classification.
-    4. Entraîne le modèle avec l'ensemble de données d'entraînement.
-    5. Évalue les performances du modèle avec l'ensemble de données de test.
+    The workflow executes several tasks in sequence:
+    1. Load and split the dataset into training, validation, and test sets.
+    2. Preprocess the data by normalizing numeric features and encoding categorical features.
+    3. Build a neural network model suitable for the classification task.
+    4. Train the model with the training dataset.
+    5. Evaluate the model's performance with the test dataset.
 
-    Le workflow est conçu pour être exécuté avec Prefect, qui gère l'exécution de chaque tâche et s'occupe de leurs dépendances.
-    La sortie du workflow est constituée des résultats de l'évaluation du modèle sur l'ensemble de test, incluant les métriques de perte et de précision.
+    The workflow is designed to be executed with Prefect, managing the execution of each task and handling their dependencies.
+    The output of the workflow includes the model evaluation results on the test dataset, comprising loss and accuracy metrics.
     """
     X_train, X_val, X_test, y_train, y_val, y_test = load_and_prepare_data(dataset_path)
     X_train_processed, X_val_processed, X_test_processed = preprocess_data(X_train, X_val, X_test)
@@ -146,21 +145,8 @@ def wine_quality_flow(dataset_path: str):
     history = train_model(model, X_train_processed, y_train, X_val_processed, y_val, epochs=2, batch_size=32)
     loss, accuracy = evaluate_model(model, X_test_processed, y_test)
 
-
 if __name__ == "__main__":
-    wine_quality_flow("data/winequality.csv")
-    #  wine_quality_flow.from_source(
-    #     source="https://github.com/ROL-1/5MLDE-soutenace.git", 
-    #     entrypoint="5MLDE_proj_wine_light.py:wine_quality_flow"
-    # ).deploy(
-    #     name="WineDeployGithubDeployment",
-    #     work_pool_name="my-managed-pool",
-    # )
-    # wine_quality_flow.serve(
-    #     name="WineServeDeployment",
-    #     tags=["ml", "wine-quality"],
-    #     # cron="0 1 * * *",  # Exécution quotidienne à 1h du matin
-    #     description="Deployment for wine quality prediction model",
-    # )
-
-    
+    dataset_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'data', 'winequality.csv')
+    )
+    wine_quality_prediction_flow(dataset_path)
