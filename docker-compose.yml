@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   prefect-flows:
     container_name: flows
@@ -11,3 +11,31 @@ services:
     environment:
       PREFECT_API_URL: ${PREFECT_API_URL}
       PREFECT_API_KEY: ${PREFECT_API_KEY}
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    command: mlflow server --backend-store-uri sqlite:///database.db --default-artifact-root /mlruns --host 0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+      - ./database:/database
+
+  fastapi-server:
+    build: ./server/backend
+    volumes:
+      - ./server/backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      SERVER_API_KEY: ${SERVER_API_KEY}
+
+  streamlit-app:
+    build: ./server/frontend
+    volumes:
+      - ./server/frontend:/app
+    ports:
+      - "8501:8501"
+    environment:
+      SERVER_API_URL: ${SERVER_API_URL}
+      SERVER_API_KEY: ${SERVER_API_KEY}
