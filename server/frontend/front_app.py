@@ -5,7 +5,16 @@ import os
 
 load_dotenv()
 
-API_URL = os.getenv("SERVER_API_URL")
+
+
+from pathlib import Path
+def is_docker() -> bool:
+    cgroup = Path("/proc/self/cgroup")
+    return Path('/.dockerenv').is_file() or cgroup.is_file() and cgroup.read_text().find("docker") > -1
+
+API_URL = os.getenv("SERVER_API_URL") if is_docker() else "http://localhost:8000"
+
+# API_URL = os.getenv("SERVER_API_URL") 
 API_KEY = os.getenv("SERVER_API_KEY")
 
 st.title("Prédiction de la qualité du vin")
@@ -40,7 +49,7 @@ if st.button("Prédire"):
     }
 
     headers = {"access_token": API_KEY}
-    response = requests.post(API_URL, json=data, headers=headers)
+    response = requests.post(f"{API_URL}/predict/", json=data, headers=headers)
     if response.status_code == 200:
         prediction = response.json()
         st.write(f"Prédiction de la qualité : {prediction}")
