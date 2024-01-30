@@ -176,6 +176,6 @@ def clean_data_flow(file_path: str):
 
 if __name__ == "__main__":
     dataset_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'data', 'winequality.csv')
+        os.path.join(os.path.dirname(__file__), '..', '..', '..', 'app', 'data', 'winequality.csv')
     )
     clean_data_flow(dataset_path)

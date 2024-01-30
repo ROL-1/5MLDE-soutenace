@@ -22,20 +22,27 @@ services:
       - ./database:/database
 
   fastapi-server:
-    build: ./server/backend
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     volumes:
-      - ./server/backend:/app
+      - ./api:/app
+      - ./model:/app/model
     ports:
       - "8000:8000"
     environment:
       SERVER_API_KEY: ${SERVER_API_KEY}
 
   streamlit-app:
-    build: ./server/frontend
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
     volumes:
-      - ./server/frontend:/app
+      - ./client:/app
     ports:
       - "8501:8501"
     environment:
       SERVER_API_URL: ${SERVER_API_URL}
       SERVER_API_KEY: ${SERVER_API_KEY}
+    depends_on:
+      - fastapi-server

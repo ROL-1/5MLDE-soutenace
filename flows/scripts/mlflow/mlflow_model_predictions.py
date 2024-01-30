@@ -1,7 +1,9 @@
 import mlflow
 import mlflow.keras
 
-from model_predictions import load_and_prepare_data, preprocess_data, build_model, train_model, evaluate_model
+import os
+
+from prefect.model_predictions import load_and_prepare_data, preprocess_data, build_model, train_model, evaluate_model
 from config import logger, MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, REGISTERED_MODEL_NAME
 
 mlflow.set_tracking_uri("http://localhost:5000")
@@ -9,7 +11,6 @@ mlflow.set_experiment("Wine Quality Prediction")
 
 
 def run_mlflow_pipeline(dataset_path: str):
-    # .fn() pour appeler la fonction sous-jacente de la tâche Prefect
     X_train, X_val, X_test, y_train, y_val, y_test = load_and_prepare_data.fn(dataset_path)
     X_train_processed, X_val_processed, X_test_processed = preprocess_data.fn(X_train, X_val, X_test)
 
@@ -43,4 +44,7 @@ def run_mlflow_pipeline(dataset_path: str):
         # mlflow.log_artifact("metrics.txt")
 
 if __name__ == "__main__":
-    run_mlflow_pipeline("data/winequality.csv")
+    dataset_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', '..', '..', 'app', 'data', 'winequality.csv')
+    )
+    run_mlflow_pipeline(dataset_path)

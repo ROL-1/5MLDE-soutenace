@@ -5,7 +5,7 @@ from fastapi.security.api_key import APIKeyHeader
 from dotenv import load_dotenv
 import os
 
-from WineModel import WineInput
+from validator import WineInput
 
 load_dotenv()
 API_KEY = os.getenv("SERVER_API_KEY")
@@ -24,7 +24,7 @@ async def get_api_key(api_key_header: str = Security(api_key_header)):
             status_code=403, detail="Accès non autorisé"
         )
 
-@app.post("/predict/", dependencies=[Depends(get_api_key)])
+@app.post("/predict", dependencies=[Depends(get_api_key)])
 async def predict(wine: WineInput):
     data = {
         "type": wine.type,
