@@ -2,6 +2,8 @@ version: "3.8"
 services:
   prefect-flows:
     container_name: flows
+    depends_on:
+      - mlflow
     build:
       context: ./flows
       dockerfile: Dockerfile
@@ -11,6 +13,7 @@ services:
     environment:
       PREFECT_API_URL: ${PREFECT_API_URL}
       PREFECT_API_KEY: ${PREFECT_API_KEY}
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
 
   mlflow:
     image: ghcr.io/mlflow/mlflow
