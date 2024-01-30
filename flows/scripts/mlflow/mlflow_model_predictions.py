@@ -7,7 +7,7 @@ from prefect.model_predictions import load_and_prepare_data, preprocess_data, bu
 from config import logger, MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, REGISTERED_MODEL_NAME
 
 mlflow.set_tracking_uri("http://localhost:5000")
-mlflow.set_experiment("Wine Quality Prediction")
+mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
 
 def run_mlflow_pipeline(dataset_path: str):

@@ -22,5 +22,5 @@ logger = get_logger(logging_level=getattr(logging, LOGGER_LEVEL))
 
 # MLFLOW
 MLFLOW_TRACKING_URI = "http://mlflow:5000" if is_docker() else "http://localhost:5000"
-MLFLOW_EXPERIMENT_NAME = "wine_quality_predictions"
+MLFLOW_EXPERIMENT_NAME = "Wine Quality Prediction"
 REGISTERED_MODEL_NAME = "wine_quality_model"
