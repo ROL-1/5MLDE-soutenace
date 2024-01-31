@@ -15,7 +15,7 @@ import mlflow.keras
 from mlflow.models.signature import infer_signature
 from prefect import task, flow
 
-from config import MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, logger
+from config import MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, REGISTERED_MODEL_NAME, logger
 
 # Configuration de MLflow
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
@@ -107,17 +107,21 @@ def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame,
     Returns:
     History: Training history.
     """
-    with mlflow.start_run():
+    with mlflow.start_run() as run:
         history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, verbose=1)
         
         mlflow.log_param("epochs", epochs)
         mlflow.log_param("batch_size", batch_size)
         mlflow.log_metrics({"train_accuracy": history.history["accuracy"][-1], "val_accuracy": history.history["val_accuracy"][-1]})
         signature = infer_signature(X_train, model.predict(X_train))            
-        # Afficher l'URI d'artefact pour le run en cours (debug)
         artifact_uri = mlflow.get_artifact_uri()
         logger.info(f"###L'URI d'artefact pour ce run est : {artifact_uri}")
         mlflow.keras.log_model(model, "model", signature=signature)
+        # Get this run ID
+        run_id = run.info.run_id
+        model_uri = f"runs:/{run_id}/model"
+        # register in MLflow model registry
+        mlflow.register_model(model_uri, REGISTERED_MODEL_NAME)
         return history
 
 @task(name='model_evaluation', tags=['model-prediction'], retries=1, retry_delay_seconds=5)
