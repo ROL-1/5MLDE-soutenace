@@ -14,7 +14,6 @@ services:
       PREFECT_API_URL: ${PREFECT_API_URL}
       PREFECT_API_KEY: ${PREFECT_API_KEY}
       MLFLOW_TRACKING_URI: "http://mlflow:5000"
-
   mlflow:
     image: ghcr.io/mlflow/mlflow
     command: mlflow server --backend-store-uri sqlite:///database.db --default-artifact-root /mlruns --host 0.0.0.0
@@ -23,6 +22,11 @@ services:
     volumes:
       - ./mlruns:/mlruns
       - ./database:/database
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://mlflow:5000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   fastapi-server:
     build:
