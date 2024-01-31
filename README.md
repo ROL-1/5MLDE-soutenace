@@ -6,6 +6,8 @@ This project is an end-to-end MLOps pipeline designed to automate and streamline
 ## Environment
 - **Docker Desktop & WSL:** Our infrastructure is containerized using Docker, providing a consistent and isolated environment for development and deployment. WSL (Windows Subsystem for Linux) enables us to seamlessly integrate Linux-based tools within a Windows environment.
 - **Prefect Cloud:** For workflow orchestration, we utilize Prefect Cloud to manage our data pipelines. This choice eliminates the need for local infrastructure management. Users must create an account, generate an API key, and manage workflows via the Prefect dashboard.
+
+Additionally you'll have to configure your own secrets in the ``.env`` file. Make sure to provide the right API URL and API Key for Prefect Cloud and for the Flask API.
  
 - [Docker](https://www.docker.com/get-started)
 - [Docker Compose](https://docs.docker.com/compose/install/)
@@ -34,9 +36,9 @@ The frontend is a Single Page Application (SPA) designed to interact with the AP
 ## Testing
 Testing is handled via PyTest, ensuring reliability and robustness of our data processing scripts. We employ unit tests, fixtures, and mocks to validate the functionality of the data-wrangling and exploratory-data-analysis components.
 
-    ```bash
-    pytest filename.py
-    ```
+    
+    pytest <your-chosen-filename>.py
+ 
  
 ## Installation and Startup
 To set up the project, follow these steps:
@@ -58,15 +60,6 @@ To stop and remove the containers, as well as networks and volumes created by Do
     ```bash
     docker-compose down -v
     ```
-    
-### Running Workflows
-- Activate Prefect Cloud with `prefect cloud login`.
-- Deploy workflows using Prefect's CLI or UI.
-- Optionally, create and manage work pools for task execution:
-  
-  ```bash
-  prefect work-pool create my-managed-pool --type prefect:managed
-
 ## Service Overviews
 - **Prefect:** Automates and schedules the execution of data pipelines.
 - **Great Expectations:** Ensures data quality and integrity through automated testing.
@@ -77,7 +70,7 @@ To stop and remove the containers, as well as networks and volumes created by Do
  
 ## Accessing the Services
 - **MLflow UI:** `http://localhost:5000` - MLflow user interface for tracking experiments.
-- **FastAPI API:** `http://localhost:8000` - Prediction API. Use `http://localhost:8000/docs` to access the Swagger documentation for the API.
+- **FastAPI API:** `http://localhost:8000` - Prediction API.
 - **Streamlit Application:** `http://localhost:8501` - Streamlit user interface for visualizing predictions.
 
 ## Project Structure
