@@ -1,3 +1,73 @@
+# Système de Prédiction de Qualité de Vin
+
+Ce projet démontre l'implémentation d'un pipeline de machine learning complet pour prédire la qualité du vin. Il utilise MLflow pour la gestion des expériences, Prefect pour l'orchestration des workflows, FastAPI pour fournir une API de prédiction, et Streamlit pour une interface utilisateur interactive.
+
+## Vue d'Ensemble
+
+Le projet est structuré autour de plusieurs services principaux, chacun étant conteneurisé à l'aide de Docker pour faciliter le déploiement et la gestion des dépendances :
+
+- **MLflow :** Pour le suivi des expériences, l'enregistrement des modèles et de leurs métriques.
+- **Prefect :** Pour orchestrer le workflow de préparation des données, d'entraînement et d'évaluation du modèle.
+- **FastAPI :** Pour exposer une API REST permettant de réaliser des prédictions avec le modèle entraîné.
+- **Streamlit :** Pour offrir une interface utilisateur permettant de visualiser et interagir avec les résultats des prédictions.
+
+## Structure du Projet
+
+- `/flows` : Scripts Prefect pour l'orchestration des workflows d'entraînement et d'évaluation du modèle.
+- `/api` : Application FastAPI pour l'API de prédiction.
+- `/client` : Application Streamlit pour l'interface utilisateur.
+- `/data` : Contient le dataset `winequality.csv` pour l'entraînement et l'évaluation du modèle.
+- `/model` : Stocke le modèle entraîné et d'autres artefacts liés au modèle.
+- `Dockerfile` : Fichiers Dockerfile pour chaque service, définissant les étapes de construction des images Docker.
+- `docker-compose.yml` : Configuration Docker Compose pour orchestrer le déploiement de tous les services.
+
+## Prérequis
+
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- Sous Windows, [WSL 2](https://docs.microsoft.com/fr-fr/windows/wsl/install) et [Docker Desktop](https://www.docker.com/products/docker-desktop) avec le backend WSL 2 activé.
+
+## Installation et Démarrage
+
+1. **Cloner le dépôt :**
+
+   Clonez le dépôt sur votre machine locale et naviguez dans le répertoire du projet :
+
+    ```bash
+    git clone <URL_DU_REPO>
+    cd <NOM_DU_REPO>
+    ```
+
+2. **Construire les images Docker :**
+
+   Construisez les images Docker pour tous les services à l'aide de Docker Compose :
+
+    ```bash
+    docker-compose build
+    ```
+
+3. **Démarrer les services :**
+
+   Lancez les services en arrière-plan :
+
+    ```bash
+    docker-compose up -d
+    ```
+
+## Accès aux Services
+
+- **MLflow UI :** `http://localhost:5000` - Interface utilisateur de MLflow pour suivre les expériences.
+- **API FastAPI :** `http://localhost:8000` - API de prédiction. Utilisez `http://localhost:8000/docs` pour accéder à la documentation Swagger de l'API.
+- **Application Streamlit :** `http://localhost:8501` - Interface utilisateur Streamlit pour visualiser les prédictions.
+
+## Nettoyage
+
+Pour arrêter et supprimer les conteneurs, ainsi que les réseaux et volumes créés par Docker Compose :
+
+```bash
+docker-compose down -v
+
+
 # Env
     conda env create -f environment.yml
     conda activate mlde

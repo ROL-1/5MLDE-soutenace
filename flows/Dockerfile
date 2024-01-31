@@ -15,5 +15,4 @@ COPY . /app
 # Rendre le script start.sh exécutable
 RUN chmod +x start.sh
 
-# Utiliser start.sh comme commande de démarrage
 CMD ["./start.sh"]
