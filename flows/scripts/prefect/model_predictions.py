@@ -11,12 +11,15 @@ from tensorflow.keras.utils import to_categorical
 from typing import List, Dict, Union, Tuple
 from tensorflow.keras.callbacks import History
 import mlflow
+import mlflow.keras
 from prefect import task, flow
 
+
+from config import MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, logger
+
 # Configuration de MLflow
-mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
-mlflow.set_tracking_uri(mlflow_tracking_uri)
-mlflow.set_experiment("Wine Quality Prediction")
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
 @task(name='load_data_3', tags=['model-prediction'], retries=3, retry_delay_seconds=10)
 def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -104,13 +107,16 @@ def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame,
     Returns:
     History: Training history.
     """
+    logger.info(f"###LANCEMENT de train_model###")
     with mlflow.start_run():
         history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, verbose=1)
         
         mlflow.log_param("epochs", epochs)
         mlflow.log_param("batch_size", batch_size)
         mlflow.log_metrics({"train_accuracy": history.history["accuracy"][-1], "val_accuracy": history.history["val_accuracy"][-1]})
-        
+                    # Afficher l'URI d'artefact pour le run en cours
+        artifact_uri = mlflow.get_artifact_uri()
+        logger.info(f"###L'URI d'artefact pour ce run est : {artifact_uri}")
         return history
 
 @task(name='model_evaluation', tags=['model-prediction'], retries=1, retry_delay_seconds=5)
@@ -126,10 +132,13 @@ def evaluate_model(model: Sequential, X_test: pd.DataFrame, y_test: pd.DataFrame
     Tuple: Test loss and accuracy.
     """
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+    logger.info(f"###LANCEMENT de evaluate_model###")
     with mlflow.start_run():
         mlflow.log_metric("test_loss", loss)
         mlflow.log_metric("test_accuracy", accuracy)
-        
+        # Afficher l'URI d'artefact pour le run en cours
+        artifact_uri = mlflow.get_artifact_uri()
+        logger.info(f"###L'URI d'artefact pour ce run est : {artifact_uri}")
         mlflow.keras.log_model(model, "model")
         
     return loss, accuracy
@@ -152,6 +161,7 @@ def wine_quality_prediction_flow(dataset_path: str):
     The workflow is designed to be executed with Prefect, managing the execution of each task and handling their dependencies.
     The output of the workflow includes the model evaluation results on the test dataset, comprising loss and accuracy metrics.
     """
+    logger.info(f"###LANCEMENT de wine_quality_prediction_flow###")
     X_train, X_val, X_test, y_train, y_val, y_test = load_and_prepare_data(dataset_path)
     X_train_processed, X_val_processed, X_test_processed = preprocess_data(X_train, X_val, X_test)
     input_dim = X_train_processed.shape[1]
