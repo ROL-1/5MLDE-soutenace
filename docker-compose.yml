@@ -22,11 +22,6 @@ services:
     volumes:
       - ./mlruns:/mlruns
       - ./database:/database
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://mlflow:5000"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   fastapi-server:
     build:

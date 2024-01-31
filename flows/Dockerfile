@@ -11,8 +11,8 @@ ENV CUDA_VISIBLE_DEVICES -1
 
 
 COPY . /app
-
+# COPY start.sh /start.sh
 # Rendre le script start.sh exécutable
 RUN chmod +x start.sh
-
-CMD ["./start.sh"]
+CMD ["python", "run_wine_quality_prediction.py"]
+#CMD ["./start.sh"]

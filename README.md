@@ -77,7 +77,7 @@ To stop and remove the containers, as well as networks and volumes created by Do
  
 ## Accessing the Services
 - **MLflow UI:** `http://localhost:5000` - MLflow user interface for tracking experiments.
-- **FastAPI API:** `http://localhost:8000` - Prediction API. Use `http://localhost:8000/docs` to access the Swagger documentation for the API.
+- **FastAPI API:** `http://localhost:8000` - Prediction API. Use `http://localhost:8000/docs` to access the documentation for the API.
 - **Streamlit Application:** `http://localhost:8501` - Streamlit user interface for visualizing predictions.
 
 ## Project Structure
