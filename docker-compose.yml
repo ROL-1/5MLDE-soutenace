@@ -2,6 +2,8 @@ version: "3.8"
 services:
   prefect-flows:
     container_name: flows
+    depends_on:
+      - mlflow
     build:
       context: ./flows
       dockerfile: Dockerfile
@@ -11,7 +13,7 @@ services:
     environment:
       PREFECT_API_URL: ${PREFECT_API_URL}
       PREFECT_API_KEY: ${PREFECT_API_KEY}
-
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
   mlflow:
     image: ghcr.io/mlflow/mlflow
     command: mlflow server --backend-store-uri sqlite:///database.db --default-artifact-root /mlruns --host 0.0.0.0
@@ -20,22 +22,34 @@ services:
     volumes:
       - ./mlruns:/mlruns
       - ./database:/database
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://mlflow:5000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   fastapi-server:
-    build: ./server/backend
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     volumes:
-      - ./server/backend:/app
+      - ./api:/app
+      - ./model:/app/model
     ports:
       - "8000:8000"
     environment:
       SERVER_API_KEY: ${SERVER_API_KEY}
 
   streamlit-app:
-    build: ./server/frontend
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
     volumes:
-      - ./server/frontend:/app
+      - ./client:/app
     ports:
       - "8501:8501"
     environment:
       SERVER_API_URL: ${SERVER_API_URL}
       SERVER_API_KEY: ${SERVER_API_KEY}
+    depends_on:
+      - fastapi-server

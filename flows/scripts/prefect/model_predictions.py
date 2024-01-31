@@ -10,8 +10,16 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.utils import to_categorical
 from typing import List, Dict, Union, Tuple
 from tensorflow.keras.callbacks import History
-
+import mlflow
+import mlflow.keras
+from mlflow.models.signature import infer_signature
 from prefect import task, flow
+
+from config import MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME, REGISTERED_MODEL_NAME, logger
+
+# Configuration de MLflow
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
 @task(name='load_data_3', tags=['model-prediction'], retries=3, retry_delay_seconds=10)
 def load_and_prepare_data(dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -99,8 +107,22 @@ def train_model(model: Sequential, X_train: pd.DataFrame, y_train: pd.DataFrame,
     Returns:
     History: Training history.
     """
-    history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, verbose=1)
-    return history
+    with mlflow.start_run() as run:
+        history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=batch_size, verbose=1)
+        
+        mlflow.log_param("epochs", epochs)
+        mlflow.log_param("batch_size", batch_size)
+        mlflow.log_metrics({"train_accuracy": history.history["accuracy"][-1], "val_accuracy": history.history["val_accuracy"][-1]})
+        signature = infer_signature(X_train, model.predict(X_train))            
+        artifact_uri = mlflow.get_artifact_uri()
+        logger.info(f"###L'URI d'artefact pour ce run est : {artifact_uri}")
+        mlflow.keras.log_model(model, "model", signature=signature)
+        # Get this run ID
+        run_id = run.info.run_id
+        model_uri = f"runs:/{run_id}/model"
+        # register in MLflow model registry
+        mlflow.register_model(model_uri, REGISTERED_MODEL_NAME)
+        return history
 
 @task(name='model_evaluation', tags=['model-prediction'], retries=1, retry_delay_seconds=5)
 def evaluate_model(model: Sequential, X_test: pd.DataFrame, y_test: pd.DataFrame) -> Tuple[float, float]:
@@ -115,8 +137,9 @@ def evaluate_model(model: Sequential, X_test: pd.DataFrame, y_test: pd.DataFrame
     Tuple: Test loss and accuracy.
     """
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
-    print(f"Test Loss: {loss}")
-    print(f"Test Accuracy: {accuracy}")
+    with mlflow.start_run():
+        mlflow.log_metric("test_loss", loss)
+        mlflow.log_metric("test_accuracy", accuracy)        
     return loss, accuracy
 
 @flow(name="Wine Quality Prediction Flow")
@@ -147,6 +170,6 @@ def wine_quality_prediction_flow(dataset_path: str):
 
 if __name__ == "__main__":
     dataset_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'data', 'winequality.csv')
+        os.path.join(os.path.dirname(__file__), '..', '..', '..', 'app', 'data', 'winequality.csv')
     )
     wine_quality_prediction_flow(dataset_path)
